@@ -1,5 +1,7 @@
 package sample;
 
+import java.util.List;
+
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import org.seasar.doma.jdbc.criteria.Entityql;
@@ -20,7 +22,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
-import java.util.List;
 
 @Path("fruits")
 @ApplicationScoped
@@ -51,12 +52,16 @@ public class FruitResource {
 
   @POST
   @Transactional
-  public Response create(Fruit fruit) {
+  public Response create(Fruit fruit) throws Exception {
     if (fruit.getId() != null) {
       throw new WebApplicationException("Id was invalidly set on request.", 422);
     }
 
     var f = new Fruit_();
+
+    entityql.insert(f, fruit).execute();
+    Thread.sleep(10000); // transaction timeout
+    fruit = new Fruit(fruit.getName() + " after");
     entityql.insert(f, fruit).execute();
     return Response.ok(fruit).status(201).build();
   }
